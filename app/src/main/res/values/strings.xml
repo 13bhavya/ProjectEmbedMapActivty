@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">MyMapActivty</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="city">City</string>
+    <string name="address">Address</string>
+    <string name="phone">Phone</string>
+
+</resources>
