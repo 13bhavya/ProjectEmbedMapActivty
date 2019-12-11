@@ -9,11 +9,17 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.nfc.Tag;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,10 +41,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     Spinner spinnerStore;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final String TAG = "MapsActivity";
     private Context context;
     public static String MapArea = "Markham";
     public static String Store;
     public static String City;
+
+    EditText mSearchText;
 
     public MapsActivity(Context ctx) {
         context = ctx;
@@ -56,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
+        mSearchText = findViewById(R.id.input_search);
 
         spinnerStore = findViewById(R.id.spinner_store);
         ArrayList<String> arraylist = new ArrayList<>();
@@ -74,7 +84,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String Storeselect = parent.getItemAtPosition(position).toString();
                 Toast.makeText(getApplicationContext(), Storeselect, Toast.LENGTH_LONG).show();
-
+                //onMapReady(Storeselect);
             }
 
             @Override
@@ -84,6 +94,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         mapFragment.getMapAsync(this);
+    }
+
+    private void init(){
+        Log.d(TAG, "init");
+
+        mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH
+                        || actionId == EditorInfo.IME_ACTION_DONE
+                        || event.getAction() == KeyEvent.ACTION_DOWN
+                        || event.getAction() == KeyEvent.KEYCODE_ENTER){
+
+                    //execute our method for searching
+                    geoLocate();
+                }
+                return false;
+            }
+        });
+    }
+
+    private void geoLocate(){
+        Log.d(TAG, "geolocate:");
+
+        String searchString = mSearchText.getText().toString();
+        Geocoder geocoder = new Geocoder(MapsActivity.this);
+        List<Address> list = new ArrayList<>();
+        try {
+            list = geocoder.getFromLocationName(searchString, 1);
+        } catch (IOException e){
+            Log.e(TAG, "geoLocate: 11" + e.getMessage());
+        }
+
+        if (list.size()> 0) {
+            Address address = list.get(0);
+
+            Toast.makeText(this, address.toString(), Toast.LENGTH_SHORT).show();
+            Log.d(TAG,"geoLocate: found a location: " + address.toString());
+        }
     }
 
     @Override
@@ -100,9 +149,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Toast.makeText(getApplicationContext(), MapArea, Toast.LENGTH_LONG).show();
 
-        mMap.clear();
+        //mMap.clear();
+
+        init();
         // Add a marker in Sydney and move the camera
-        try {
+       /* try {
             //using geo coder object getting maximum 5 addresses for given place name / address
             List<Address> geocodeResults = coder.getFromLocationName(placeName, 3);
             Iterator<Address> locations = geocodeResults.iterator();
@@ -141,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         } catch (IOException e) {
             Toast.makeText(getApplicationContext(), "Failed to get location info " + e, Toast.LENGTH_LONG).show();
-        }
+        }*/
     }
 
     private void enableMyLocation() {
